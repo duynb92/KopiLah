@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Coffee: Identifiable {
+struct Coffee: Identifiable, Hashable {
     let id: Int // coffee_id
     let name: String // us_name
     let tasteNotes: String // taste_notes

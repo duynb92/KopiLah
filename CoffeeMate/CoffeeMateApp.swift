@@ -11,7 +11,7 @@ import SwiftUI
 struct CoffeeMateApp: App {
     var body: some Scene {
         WindowGroup {
-            CoffeeListView()
+            RootSplitView()
         }
     }
 }

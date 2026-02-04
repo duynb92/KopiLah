@@ -9,32 +9,49 @@ import SwiftUI
 // MARK: - Coffee List View
 struct CoffeeListView: View {
     @StateObject private var viewModel = CoffeeListViewModel()
+    @Binding var selectedCoffee: Coffee?
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
     var body: some View {
-        NavigationStack {
-            Group {
-                if viewModel.isLoading {
-                    ProgressView("Loading coffees...")
-                } else if viewModel.coffees.isEmpty {
-                    ContentUnavailableView(
-                        "No Coffees Found",
-                        systemImage: "cup.and.saucer",
-                        description: Text(viewModel.errorMessage ?? "Make sure the database file is added to the app bundle")
-                    )
-                } else {
-                    List(viewModel.filteredCoffees) { coffee in
-                        NavigationLink(destination: CoffeeTranslationView(coffee: coffee)) {
-                            CoffeeRow(coffee: coffee)
-                        }
-                    }
-                }
-            }
-            .navigationTitle("Coffee List")
-            .searchable(text: $viewModel.searchText, prompt: "Search coffee...")
+        listView
             .onAppear {
                 viewModel.loadCoffees()
             }
+    }
+    
+    private var listView: some View {
+        Group {
+            if viewModel.isLoading {
+                ProgressView("Loading coffees...")
+            } else if viewModel.coffees.isEmpty {
+                ContentUnavailableView(
+                    "No Coffees Found",
+                    systemImage: "cup.and.saucer",
+                    description: Text(viewModel.errorMessage ?? "Make sure the database file is added to the app bundle")
+                )
+            } else {
+                Group {
+                    if horizontalSizeClass == .regular {
+                        List(viewModel.filteredCoffees, selection: $selectedCoffee) { coffee in
+                            NavigationLink(value: coffee) {
+                                CoffeeRow(coffee: coffee)
+                            }
+                        }
+                    } else {
+                        List(viewModel.filteredCoffees) { coffee in
+                            NavigationLink(value: coffee) {
+                                CoffeeRow(coffee: coffee)
+                            }
+                        }
+                    }
+                }
+                .navigationDestination(for: Coffee.self) { coffee in
+                    CoffeeTranslationView(coffee: coffee)
+                }
+            }
         }
+        .navigationTitle("Coffee List")
+        .searchable(text: $viewModel.searchText, prompt: "Search coffee...")
     }
 }
 
@@ -100,7 +117,7 @@ struct CoffeeTranslationView: View {
         }
         .navigationTitle(coffee.name)
         .navigationBarTitleDisplayMode(.large)
-        .onAppear {
+        .task(id: coffee.id) {
             viewModel.loadEquivalents()
         }
     }
@@ -185,5 +202,5 @@ struct TranslationRow: View {
 
 // MARK: - Preview
 #Preview {
-    CoffeeListView()
+    CoffeeListView(selectedCoffee: .constant(nil))
 }
